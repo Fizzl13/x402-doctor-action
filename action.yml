@@ -1,0 +1,48 @@
+name: x402 Doctor check
+description: Check your x402 payment endpoints on every push. Fails the build on a broken 402, with the fix for each problem.
+author: Fizzl13
+branding:
+  icon: activity
+  color: blue
+inputs:
+  urls:
+    description: The x402 endpoint(s) to check, one per line (or comma separated). localhost works for a dev server started earlier in the job.
+    required: true
+  method:
+    description: GET or POST. Default tries GET, then POST.
+    required: false
+    default: ''
+  fail-on:
+    description: When the step fails. "fail" (a failed check, the default), "warn" (warnings too) or "never" (report only).
+    required: false
+    default: fail
+outputs:
+  overall:
+    description: pass, warn or fail (the worst across all URLs)
+    value: ${{ steps.doctor.outputs.overall }}
+  report:
+    description: The full reports as JSON (an array, one per URL)
+    value: ${{ steps.doctor.outputs.report }}
+runs:
+  using: composite
+  steps:
+    # The checks themselves live in Fizzl13/x402-doctor, pinned to one commit so a
+    # release of this Action always runs the same code.
+    - name: Install x402 Doctor
+      shell: bash
+      env:
+        DOCTOR_REPO: https://github.com/Fizzl13/x402-doctor
+        DOCTOR_SHA: 2018adac58f715753489521beb08e1064812301e
+      run: |
+        dir="$RUNNER_TEMP/x402-doctor"
+        rm -rf "$dir" && mkdir -p "$dir" && cd "$dir"
+        git init -q && git fetch -q --depth 1 "$DOCTOR_REPO" "$DOCTOR_SHA" && git checkout -q FETCH_HEAD
+        npm ci --omit=dev --ignore-scripts --no-audit --no-fund --loglevel=error
+    - name: Check the endpoints
+      id: doctor
+      shell: bash
+      env:
+        DOCTOR_URLS: ${{ inputs.urls }}
+        DOCTOR_METHOD: ${{ inputs.method }}
+        DOCTOR_FAIL_ON: ${{ inputs.fail-on }}
+      run: node "$RUNNER_TEMP/x402-doctor/bin/action.js"
