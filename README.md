@@ -59,3 +59,7 @@ README, so buyers and agents can see your endpoint works:
 - Free web check: <https://x402-doctor.fizzl.eu>
 - Source of the checks: [Fizzl13/x402-doctor](https://github.com/Fizzl13/x402-doctor)
 - Paid preflight API for agents (before they pay an endpoint): see x402 Doctor.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
